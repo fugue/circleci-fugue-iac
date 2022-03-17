@@ -1,0 +1,21 @@
+environment-id: abcd1234-abcd-1234-abcd-abcd1234abcd
+exclude: []
+format: text
+input-type:
+- auto
+no-built-ins: false
+no-ignore: false
+only: []
+severity: unknown
+sync: false
+# exclude: []
+# format: text
+# include: []
+# input-type:
+#     - auto
+# inputs: []
+# no-built-ins: false
+# no-ignore: false
+# only: []
+# severity: unknown
+# sync: false

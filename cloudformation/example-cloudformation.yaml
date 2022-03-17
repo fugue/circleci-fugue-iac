@@ -1,0 +1,78 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  MyBadS3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: my-bad-example-bucket
+      AccessControl: Private
+      # PublicAccessBlockConfiguration:
+      #   BlockPublicAcls: true
+      #   BlockPublicPolicy: true
+      #   IgnorePublicAcls: true
+      #   RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+             SSEAlgorithm: 'AES256'
+  MyBadS3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: MyBadS3Bucket
+      PolicyDocument:
+        Statement:
+          - Action: s3:*
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+            Effect: Deny
+            Principal: "*"
+            Resource:
+              - Fn::GetAtt:
+                  - MyBadS3Bucket
+                  - Arn
+              - Fn::Join:
+                  - ""
+                  - - Fn::GetAtt:
+                        - MyBadS3Bucket
+                        - Arn
+                    - /*
+        Version: "2012-10-17"
+  MyGoodS3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: my-good-example-bucket
+      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+             SSEAlgorithm: 'AES256'
+  MyGoodS3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket:
+        Ref: MyGoodS3Bucket
+      PolicyDocument:
+        Statement:
+          - Action: s3:*
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+            Effect: Deny
+            Principal: "*"
+            Resource:
+              - Fn::GetAtt:
+                  - MyGoodS3Bucket
+                  - Arn
+              - Fn::Join:
+                  - ""
+                  - - Fn::GetAtt:
+                        - MyGoodS3Bucket
+                        - Arn
+                    - /*
+        Version: "2012-10-17"

@@ -1,0 +1,71 @@
+# Use the latest 2.1 version of CircleCI pipeline process engine.
+# See: https://circleci.com/docs/2.0/configuration-reference
+version: 2.1
+
+orbs:
+  python: circleci/python@1.5.0
+
+jobs:
+  regula-local:
+    resource_class: medium
+    machine:
+      image: ubuntu-2004:202010-01
+    steps:
+      - checkout
+      - run:
+          name: Pull regula image
+          command: docker pull fugue/regula:v${FUGUE_REGULA_VERSION}
+      - run:
+          name: Regula version
+          command: docker run --rm fugue/regula:v${FUGUE_REGULA_VERSION} version
+      - run:
+          name: Scan CloudFormation templates locally
+          command: |
+            results_dir=~/test-results/regula
+            mkdir -p ${results_dir}
+            docker run --rm -v $(pwd):/workspace \
+              fugue/regula:v${FUGUE_REGULA_VERSION} \
+              run -f junit \
+              cloudformation/*.yaml \
+              > ${results_dir}/results.xml
+      - store_test_results:
+          path: ~/test-results/regula
+
+  regula-sync:
+    resource_class: medium
+    machine:
+      image: ubuntu-2004:202010-01
+    steps:
+      - checkout
+      - run:
+          name: Pull regula image
+          command: docker pull fugue/regula:v${FUGUE_REGULA_VERSION}
+      - run:
+          name: Regula version
+          command: docker run --rm fugue/regula:v${FUGUE_REGULA_VERSION} version
+      - run:
+          name: Scan CloudFormation and upload results to Fugue
+          command: |
+            docker run --rm --user $(id -u):$(id -g) -v $(pwd):/workspace \
+              -e FUGUE_API_ID=${FUGUE_API_ID} \
+              -e FUGUE_API_SECRET=${FUGUE_API_SECRET} \
+              fugue/regula:v${FUGUE_REGULA_VERSION} \
+              run --sync --upload --severity off
+
+# Invoke jobs via workflows
+# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
+workflows:
+  commit:
+    jobs:
+      - regula-local
+  nightly:
+    triggers:
+      - schedule:
+          cron: '0 2 * * *'
+          filters:
+            branches:
+              only:
+                - main
+    jobs:
+      - regula-local
+      - regula-sync
